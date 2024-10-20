@@ -1,6 +1,6 @@
---import qualified Data.List
---import qualified Data.Array
---import qualified Data.Bits
+import qualified Data.List
+import qualified Data.Array
+import qualified Data.Bits
 
 -- PFL 2024/2025 Practical assignment 1
 
@@ -13,13 +13,16 @@ type Distance = Int
 type RoadMap = [(City,City,Distance)]
 
 cities :: RoadMap -> [City]
-cities = undefined -- modifiy this line to implement the solution, for each exercise not solved, leave the function definition like this
+cities roadmap = Data.List.nub (concatMap (\(city1, city2, _) -> [city1, city2] )roadmap)
 
 areAdjacent :: RoadMap -> City -> City -> Bool
-areAdjacent = undefined
+areAdjacent roadmap c1 c2 = any (\(city1,city2,_) -> (city1 == c1 && city2 == c2) || (city1 == c2 && city2 == c1)) roadmap
 
 distance :: RoadMap -> City -> City -> Maybe Distance
-distance = undefined
+distance roadmap c1 c2 = 
+    case [distance | (city1, city2, distance) <- roadmap, (city1 == c1 && city2 == c2) || (city1 == c2 && city2 == c1)] of
+    [] -> Nothing
+    (distance:_) -> Just distance
 
 adjacent :: RoadMap -> City -> [(City,Distance)]
 adjacent = undefined
