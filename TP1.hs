@@ -13,19 +13,19 @@ type Distance = Int
 type RoadMap = [(City,City,Distance)]
 
 cities :: RoadMap -> [City]
-cities roadmap = Data.List.nub (concatMap (\(city1, city2, _) -> [city1, city2] )roadmap)
+cities roadmap = Data.List.nub (concatMap (\(city1, city2, _) -> [city1, city2] ) roadmap)
 
 areAdjacent :: RoadMap -> City -> City -> Bool
 areAdjacent roadmap c1 c2 = any (\(city1,city2,_) -> (city1 == c1 && city2 == c2) || (city1 == c2 && city2 == c1)) roadmap
 
 distance :: RoadMap -> City -> City -> Maybe Distance
-distance roadmap c1 c2 = 
+distance roadmap c1 c2 =
     case [distance | (city1, city2, distance) <- roadmap, (city1 == c1 && city2 == c2) || (city1 == c2 && city2 == c1)] of
     [] -> Nothing
     (distance:_) -> Just distance
 
 adjacent :: RoadMap -> City -> [(City,Distance)]
-adjacent = undefined
+adjacent road city= [(c, d) | (c1,c,d) <- road, c1==city] ++ [(c1, d) | (c1,c,d) <- road, c==city]
 
 pathDistance :: RoadMap -> Path -> Maybe Distance
 pathDistance = undefined
