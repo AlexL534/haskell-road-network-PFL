@@ -30,8 +30,15 @@ adjacent road city= [(c, d) | (c1,c,d) <- road, c1==city] ++ [(c1, d) | (c1,c,d)
 pathDistance :: RoadMap -> Path -> Maybe Distance
 pathDistance = undefined
 
+maxNum :: Ord a=> [a]->a
+maxNum [x]=x
+maxNum (x:y:xs) = maxNum (max x y:xs)
+
+maxAdj :: RoadMap -> Int
+maxAdj road= maxNum [length(adjacent road c) | (c,c2,d)<-road]
+
 rome :: RoadMap -> [City]
-rome = undefined
+rome road= Data.List.nub [c | (c,c2,d)<- road, length (adjacent road c)==maxAdj road]
 
 isStronglyConnected :: RoadMap -> Bool
 isStronglyConnected = undefined
