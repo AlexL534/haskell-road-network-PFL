@@ -12,12 +12,49 @@ type Distance = Int
 
 type RoadMap = [(City,City,Distance)]
 
+-- | Returns a list of all cities present in the given roadmap.
+-- It removes duplicates using the auxiliary function removeDuplicates.
+-- Arguments:
+--   roadmap - A list of tuples where each tuple represents a road connecting two cities and their distance.
+-- Returns:
+--   A list of cities present in the roadmap, without duplicates.
+-- Time Complexity: O(n log n) (due to the auxiliary function)
+-- Space Complexity: O(n)
 cities :: RoadMap -> [City]
-cities roadmap = Data.List.nub (concatMap (\(city1, city2, _) -> [city1, city2] ) roadmap)
+cities roadmap = removeDuplicates [city | (city1, city2, _) <- roadmap, city <- [city1, city2]]
 
+-- | Auxiliary function to remove duplicates from a list using sorting and grouping
+-- This functions assumes that the elements are of an Ord type to enable sorting
+-- Arguments:
+-- A list of elements of type a, where a is a type that has an Ord instance
+-- Returns:
+-- A list of unique elements
+-- Time Complexity : O(n log n) due to sorting, followed by O(n) for grouping
+-- Space Complexity : O(n)
+removeDuplicates :: Ord a => [a] -> [a]
+removeDuplicates = map head . Data.List.group . Data.List.sort
+
+-- | Checks if two cities are directly connected in the given roadmap.
+-- Arguments:
+--   roadmap - A list of tuples representing the roadmap, where each tuple contains two cities and their distance.
+--   c1 - The first city.
+--   c2 - The second city.
+-- Returns:
+--   True if there is a direct road between c1 and c2, otherwise False.
+-- Time Complexity : O(n)
+-- Space Complexity : O(1)
 areAdjacent :: RoadMap -> City -> City -> Bool
 areAdjacent roadmap c1 c2 = any (\(city1,city2,_) -> (city1 == c1 && city2 == c2) || (city1 == c2 && city2 == c1)) roadmap
 
+-- | Returns the distance between two cities if they are directly connected.
+-- Arguments:
+--   roadmap - A list of tuples representing the roadmap, where each tuple contains two cities and their distance.
+--   c1 - The first city.
+--   c2 - The second city.
+-- Returns:
+--   Just the distance if the cities are directly connected, otherwise Nothing.
+-- Time Complexity : O(n)
+-- Space Complexity : O(n)
 distance :: RoadMap -> City -> City -> Maybe Distance
 distance roadmap c1 c2 =
     case [distance | (city1, city2, distance) <- roadmap, (city1 == c1 && city2 == c2) || (city1 == c2 && city2 == c1)] of
