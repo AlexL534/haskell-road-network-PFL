@@ -79,7 +79,7 @@ pathDistance road (x:y:xs) =
         Nothing -> Nothing
         Just dis -> case pathDistance road (y:xs) of
             Nothing->Nothing
-            Just tdis -> Just (dis + tdis) 
+            Just tdis -> Just (dis + tdis)
 
 
 maxNum :: Ord a=> [a]->a
@@ -111,7 +111,9 @@ bfs roadmap startCity = bfs' [startCity] []
                 unvisitedNeighbors = [neighbor | (neighbor, _) <- adjacent roadmap x, neighbor `notElem` visited]
 
 isStronglyConnected :: RoadMap -> Bool
-isStronglyConnected = undefined
+isStronglyConnected roadmap=
+    let allCities = cities roadmap
+    in (null allCities || (length allCities == length (bfs roadmap (head allCities))))
 
 shortestPath :: RoadMap -> City -> City -> [Path]
 shortestPath = undefined
