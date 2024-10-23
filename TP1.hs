@@ -84,6 +84,24 @@ maxAdj road= maxNum ([length (adjacent road c) | (c,c2,d)<-road] ++ [length (adj
 rome :: RoadMap -> [City]
 rome road= Data.List.nub ( [c | (c,c2,d)<- road, length (adjacent road c)==maxAdj road] ++ [c2 | (c,c2,d)<- road, length (adjacent road c2)==maxAdj road])
 
+-- |Performs a BFS on the given roadmap starting from a specified city.
+-- This function returns a list of all the cities reachable from the start city.
+-- Arguments:
+--  roadmap - A list of tuples where each tuple represents a road connecting two cities and their distance.
+-- startCity - The city from where the search begins.
+-- Returns:
+--  A list of cities reachable from startCity without duplicates.
+-- Time Complexity: O(V + E), where V is the number of cities and E is the number of edges (roads).
+bfs :: RoadMap -> City -> [City]
+bfs roadmap startCity = bfs' [startCity] []
+    where
+        bfs' [] visited = visited
+        bfs' (x:xs) visited
+            | x `elem` visited = bfs' xs visited
+            | otherwise =  bfs' (xs ++ unvisitedNeighbors) (x : visited)
+            where
+                unvisitedNeighbors = [neighbor | (neighbor, _) <- adjacent roadmap x, neighbor `notElem` visited]
+
 isStronglyConnected :: RoadMap -> Bool
 isStronglyConnected = undefined
 
