@@ -65,14 +65,22 @@ adjacent :: RoadMap -> City -> [(City,Distance)]
 --adjacent road city= [(c, d) | (c1,c,d) <- road, c1==city] ++ [(c1, d) | (c1,c,d) <- road, c==city]
 adjacent [] city=[]
 adjacent rd city
-    | c1==city = (c2,d) : adjacent (tail rd) city 
+    | c1==city = (c2,d) : adjacent (tail rd) city
     | c2==city = (c1,d) : adjacent (tail rd) city
-    | otherwise = adjacent (tail rd) city 
+    | otherwise = adjacent (tail rd) city
     where (c1,c2,d) = head rd
 
 
 pathDistance :: RoadMap -> Path -> Maybe Distance
-pathDistance = undefined
+pathDistance road [] = Nothing
+pathDistance road [_] = Just 0
+pathDistance road (x:y:xs) =
+        case distance road x y of
+        Nothing -> Nothing
+        Just dis -> case pathDistance road (y:xs) of
+            Nothing->Nothing
+            Just tdis -> Just (dis + tdis) 
+
 
 maxNum :: Ord a=> [a]->a
 maxNum [x]=x
