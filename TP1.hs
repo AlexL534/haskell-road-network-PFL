@@ -62,7 +62,14 @@ distance roadmap c1 c2 =
     (distance:_) -> Just distance
 
 adjacent :: RoadMap -> City -> [(City,Distance)]
-adjacent road city= [(c, d) | (c1,c,d) <- road, c1==city] ++ [(c1, d) | (c1,c,d) <- road, c==city]
+--adjacent road city= [(c, d) | (c1,c,d) <- road, c1==city] ++ [(c1, d) | (c1,c,d) <- road, c==city]
+adjacent [] city=[]
+adjacent rd city
+    | c1==city = (c2,d) : adjacent (tail rd) city 
+    | c2==city = (c1,d) : adjacent (tail rd) city
+    | otherwise = adjacent (tail rd) city 
+    where (c1,c2,d) = head rd
+
 
 pathDistance :: RoadMap -> Path -> Maybe Distance
 pathDistance = undefined
@@ -72,10 +79,10 @@ maxNum [x]=x
 maxNum (x:y:xs) = maxNum (max x y:xs)
 
 maxAdj :: RoadMap -> Int
-maxAdj road= maxNum [length(adjacent road c) | (c,c2,d)<-road]
+maxAdj road= maxNum ([length (adjacent road c) | (c,c2,d)<-road] ++ [length (adjacent road c2) | (c,c2,d)<-road])
 
 rome :: RoadMap -> [City]
-rome road= Data.List.nub [c | (c,c2,d)<- road, length (adjacent road c)==maxAdj road]
+rome road= Data.List.nub ( [c | (c,c2,d)<- road, length (adjacent road c)==maxAdj road] ++ [c2 | (c,c2,d)<- road, length (adjacent road c2)==maxAdj road])
 
 isStronglyConnected :: RoadMap -> Bool
 isStronglyConnected = undefined
