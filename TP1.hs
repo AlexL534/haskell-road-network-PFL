@@ -103,39 +103,35 @@ pathDistance road (x:y:xs) =
             Nothing->Nothing
             Just tdis -> Just (dis + tdis)
 
--- | Finds the maximum number in a list of ordered elements.
--- Arguments:
---   A list of elements of a type that has an Ord instance.
--- Returns:
---   The maximum element in the list.
--- Time Complexity: O(n)
--- Space Complexity: O(1)
-
-maxNum :: Ord a=> [a]->a
-maxNum [x]=x
-maxNum (x:y:xs) = maxNum (max x y:xs)
-
--- | Finds the maximum number of adjacent cities any city has in the given roadmap.
--- Arguments:
---   roadmap - A list of tuples where each tuple represents a road connecting two cities and their distance.
--- Returns:
---   The maximum number of adjacent cities for any city in the roadmap.
--- Time Complexity: O(n^2), where n is the number of roads, due to multiple calls to the 'adjacent' function.
--- Space Complexity: O(n) (for storing adjacency lists during computation).
-
-maxAdj :: RoadMap -> Int
-maxAdj road= maxNum ([length (adjacent road c) | (c,c2,d)<-road] ++ [length (adjacent road c2) | (c,c2,d)<-road])
-
 -- | Identifies all cities that have the maximum number of adjacent connections in the roadmap.
+-- This function counts how many adjacent cities each city has and returns a list of cities that have the highest number of connections.
 -- Arguments:
---   roadmap - A list of tuples where each tuple represents a road connecting two cities and their distance.
+--   road - A list of tuples representing the roadmap, where each tuple contains two cities and their distance.
 -- Returns:
 --   A list of cities that have the highest number of adjacent connections.
--- Time Complexity: O(n^2), where n is the number of roads, due to multiple calls to the 'adjacent' function.
--- Space Complexity: O(n), for storing the resulting list of cities.
+-- Time Complexity: O(n), where n is the number of cities in the roadmap.
+-- Space Complexity: O(n), for storing counts of adjacent connections.
 
 rome :: RoadMap -> [City]
-rome road= Data.List.nub ( [c | (c,c2,d)<- road, length (adjacent road c)==maxAdj road] ++ [c2 | (c,c2,d)<- road, length (adjacent road c2)==maxAdj road])
+rome road = 
+    let
+        counts = [(city, countAdjacent road city) | city <- cities road]
+        maxCount = maximum (map snd counts)
+        maxCities = [city | (city, count) <- counts, count == maxCount]
+
+    in maxCities
+
+-- | Counts the number of cities adjacent to a given city in the roadmap.
+-- Arguments:
+--   roadmap - A list of tuples representing the roadmap, where each tuple contains two cities and their distance.
+--   city - The city for which adjacent connections are counted.
+-- Returns:
+--   The total number of adjacent cities.
+-- Time Complexity: O(n), where n is the number of roads in the roadmap.
+-- Space Complexity: O(1)
+countAdjacent :: RoadMap -> City -> Int
+countAdjacent roadmap city = 
+    length [() | (c1,c2,_) <- roadmap, city `elem` [c1,c2]] 
 
 -- |Performs a BFS on the given roadmap starting from a specified city.
 -- This function returns a list of all the cities reachable from the start city.
