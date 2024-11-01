@@ -12,6 +12,10 @@ type Distance = Int
 
 type RoadMap = [(City,City,Distance)]
 
+type AdjList = [(City,[(City,Distance)])]
+type Prelude = [(City,City)]
+type PQueue = [(City,Distance)]
+
 -- | Returns a list of all cities present in the given roadmap
 -- It removes duplicates using the auxiliary function removeDuplicates
 -- Arguments:
@@ -113,7 +117,7 @@ pathDistance road (x:y:xs) =
 -- Space Complexity: O(n), for storing counts of adjacent connections.
 
 rome :: RoadMap -> [City]
-rome road = 
+rome road =
     let
         counts = [(city, countAdjacent road city) | city <- cities road]
         maxCount = maximum (map snd counts)
@@ -130,8 +134,8 @@ rome road =
 -- Time Complexity: O(n), where n is the number of roads in the roadmap.
 -- Space Complexity: O(1)
 countAdjacent :: RoadMap -> City -> Int
-countAdjacent roadmap city = 
-    length [() | (c1,c2,_) <- roadmap, city `elem` [c1,c2]] 
+countAdjacent roadmap city =
+    length [() | (c1,c2,_) <- roadmap, city `elem` [c1,c2]]
 
 -- |Performs a BFS on the given roadmap starting from a specified city.
 -- This function returns a list of all the cities reachable from the start city.
@@ -167,8 +171,71 @@ isStronglyConnected roadmap=
     let allCities = cities roadmap
     in (null allCities || (length allCities == length (bfs roadmap (head allCities))))
 
+initializePQueue :: RoadMap -> City -> [(City,Distance)]
+initializePQueue road city = Data.List.sortOn snd ([(c,9999) | c<-cities road,c/=city] ++ [(city,0)])
+
+addPQueue :: PQueue -> [(City,Distance)] -> PQueue
+addPQueue pq newDist = Data.List.sortOn snd ([if fst p `elem` map fst newDist then (fst p,snd (head (filter (\u->fst u == fst p) newDist))) else p | p <-pq ] ++ [nd | nd <- newDist , fst nd `notElem` map fst pq])
+
+updatePQueue :: PQueue->[(City,Distance)] ->PQueue
+updatePQueue pq newV= Data.List.sortOn snd ([if fst p `elem` map fst newV then (fst p, snd (head (filter (\u->fst u == fst p) newV))) else p | p <-pq])
+
+initializeAdjList :: RoadMap ->[City] -> AdjList
+initializeAdjList road []=[]
+initializeAdjList road cities= (head cities,adjacent road (head cities)) : initializeAdjList road (tail cities)
+
+getAdj :: AdjList->City -> [(City,Distance)]
+getAdj adj c= snd (head (filter (\(a,b)->a==c) adj))
+
+getNewDist :: PQueue -> [(City,Distance)]-> [(City,Distance)] -> [(City,Distance)]
+getNewDist pqueue distsToSource []=[]
+getNewDist pqueue distsToSource adj
+    | distTosource >= distToAdj + adjToSource = (c,distToAdj + adjToSource) : getNewDist pqueue distsToSource (tail adj)
+    | otherwise = getNewDist pqueue distsToSource (tail adj)
+    where
+        c = fst (head adj)
+        distTosource = snd (head (filter (\(a,b)->a==c) distsToSource))
+        distToAdj = snd (head adj)
+        adjToSource = snd (head pqueue)
+
+
+updatePrelude :: Prelude -> City ->[City]->Prelude
+updatePrelude prelude source cities = [if fst pr `elem` cities then (fst pr , source) else pr | pr <- prelude] ++ [(c,source) | c<-cities, c `notElem` map fst prelude]
+
+getPathFormPrelude:: City->City ->Prelude -> Path
+getPathFormPrelude source dest prelude
+    | source == dest =[]
+    | dest `elem` map fst prelude =  prevCity : getPathFormPrelude source prevCity prelude
+    | otherwise = []
+    where
+        prevCity = snd (head (filter (\u-> fst u == dest) prelude))
+
+shortestPath' :: RoadMap -> City -> City -> PQueue -> [(City,Distance)]-> AdjList -> Prelude -> Prelude
+
+shortestPath' road source dest [] distToSource adjList prelude= prelude
+
+shortestPath' road source dest pqueue disToSource adjList prelude = shortestPath' road source dest updatedPqueue updatedDisToSource adjList updatedPrelude
+    where
+        city = fst (head pqueue)
+        adjs = getAdj adjList city
+        newDists = getNewDist pqueue disToSource adjs
+        updatedDisToSource = updatePQueue disToSource newDists
+        updatedPqueue = addPQueue (tail pqueue) newDists
+        cities = map fst newDists
+        updatedPrelude = updatePrelude prelude city cities
+
+
+
 shortestPath :: RoadMap -> City -> City -> [Path]
-shortestPath = undefined
+shortestPath road source dest
+    | source==dest = [[source]]
+    | otherwise=[dest : getPathFormPrelude source dest prelude]
+    where
+        pqueue = [(source,0)]
+        distToSource = initializePQueue road source
+        adjacentList = initializeAdjList road (cities road)
+        prelude = shortestPath' road source dest pqueue distToSource adjacentList []
+
 
 travelSales :: RoadMap -> Path
 travelSales = undefined
