@@ -170,9 +170,40 @@ isStronglyConnected roadmap=
 shortestPath :: RoadMap -> City -> City -> [Path]
 shortestPath = undefined
 
-travelSales :: RoadMap -> Path
-travelSales = undefined
+-- Custom function to find the minimum by comparing the first element of tuples
+minByFirst :: Ord a => [(a, b)] -> (a, b)
+minByFirst = Data.List.minimumBy (\(a, _) (b, _) -> compare a b)
 
+travelSales :: RoadMap -> Path
+travelSales roadmap =
+    let
+        allCities = cities roadmap
+        n = length allCities
+        maxBitmask = 2^n - 1
+        memo = Data.Array.array ((0, 0), (maxBitmask, n - 1)) [((bitmask, i), Nothing) | bitmask <- [0..maxBitmask], i <- [0..n - 1]]
+
+        tsp :: Int -> Int -> Data.Array.Array (Int, Int) (Maybe (Distance, Path)) -> (Maybe (Distance, Path), Data.Array.Array (Int, Int) (Maybe (Distance, Path)))
+        tsp bitmask pos memoArr
+            | bitmask == maxBitmask = (Just (0, [allCities !! pos]), memoArr)  -- All cities visited, return to start
+            | otherwise = 
+                case memoArr Data.Array.! (bitmask, pos) of
+                    Just result -> (Just result, memoArr)  -- Memoized result found
+                    Nothing -> 
+                        let possiblePaths = [(d + nextDist, allCities !! pos : nextPath) | 
+                                next <- [0..n-1], 
+                                next /= pos,
+                                (bitmask Data.Bits..&. (1 `Data.Bits.shiftL` next)) == 0,  -- City not yet visited
+                                Just d <- [distance roadmap (allCities !! pos) (allCities !! next)],  -- Distance is defined
+                                let (nextResult, newMemo) = tsp (bitmask Data.Bits..|. (1 `Data.Bits.shiftL` next)) next memoArr,
+                                Just (nextDist, nextPath) <- [nextResult]]
+                            minPath = if null possiblePaths then Nothing else Just (minByFirst possiblePaths)
+                            updatedMemo = memoArr Data.Array.// [((bitmask, pos), minPath)]
+                        in (minPath, updatedMemo)
+        
+    in case tsp 1 0 memo of
+        (Nothing, _) -> []  -- No path found
+        (Just (_, path), _) -> path ++ [head path]  -- Path found, close the cycle by adding start city at the end
+        
 tspBruteForce :: RoadMap -> Path
 tspBruteForce = undefined -- only for groups of 3 people; groups of 2 people: do not edit this function
 
