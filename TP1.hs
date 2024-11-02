@@ -1,6 +1,7 @@
 import qualified Data.List
 import qualified Data.Array
 import qualified Data.Bits
+import Debug.Trace
 
 -- PFL 2024/2025 Practical assignment 1
 
@@ -224,17 +225,40 @@ shortestPath' road source dest pqueue disToSource adjList prelude = shortestPath
         cities = map fst newDists
         updatedPrelude = updatePrelude prelude city cities
 
+pathDistanceInt :: RoadMap -> Path -> Distance
+pathDistanceInt road [] = 0
+pathDistanceInt road [_] = 0
+pathDistanceInt road (x:y:xs) =  if x/=y then dist + pathDistanceInt road (y:xs) else 0 + pathDistanceInt road (y:xs)
+    where
+        dist=  head [distance | (city1, city2, distance) <- road, (city1 == x && city2 == y) || (city1 == y && city2 == x)]
+
+allPaths:: RoadMap -> AdjList -> Distance -> City -> City -> [City] -> [Path] -> Path -> Distance -> [Path]
+allPaths road adjList minCost source dest visited paths currentPath currentPathCost
+    | source == dest = let pathCost =  pathDistanceInt road currentPath
+        in if pathCost == minCost then  reverse currentPath : paths else  paths
+    | otherwise =  foldl allPathsAux paths adjs
+    where
+        
+        
+        adjs =  getAdj adjList source 
+        allPathsAux  paths (ad,dist)
+            | ad `elem` visited = paths
+            | currentPathCost + dist > minCost = paths
+            | otherwise = allPaths road adjList minCost ad dest (ad:visited) paths (ad:currentPath) (currentPathCost+dist)
 
 
 shortestPath :: RoadMap -> City -> City -> [Path]
 shortestPath road source dest
     | source==dest = [[source]]
-    | otherwise=[dest : getPathFormPrelude source dest prelude]
+    | otherwise= if null dijkstraSP then [] else paths
     where
         pqueue = [(source,0)]
         distToSource = initializePQueue road source
         adjacentList = initializeAdjList road (cities road)
         prelude = shortestPath' road source dest pqueue distToSource adjacentList []
+        dijkstraSP = getPathFormPrelude source dest prelude
+        dijkstraDistance = pathDistanceInt road (dest : dijkstraSP)
+        paths= allPaths road adjacentList dijkstraDistance source dest [source] [] [source] 0
 
 
 travelSales :: RoadMap -> Path
