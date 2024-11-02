@@ -15,7 +15,7 @@ type RoadMap = [(City,City,Distance)]
 -- | Returns a list of all cities present in the given roadmap
 -- It removes duplicates using the auxiliary function removeDuplicates
 -- Arguments:
---   roadmap - A list of tuples where each tuple represents a road connecting two cities and their distance
+--   roadmap - A list of tuples where each tuple represents a road connecting two cities and their distance.
 -- Returns:
 --   A list of cities present in the roadmap, without duplicates
 -- Time Complexity: O(n log n)
@@ -38,7 +38,7 @@ removeDuplicates = map head . Data.List.group . Data.List.sort
 
 -- | Checks if two cities are directly connected in the given roadmap.
 -- Arguments:
---   roadmap - A list of tuples representing the roadmap, where each tuple contains two cities and their distance.
+--   roadmap - A list of tuples where each tuple represents a road connecting two cities and their distance.
 --   c1 - The first city.
 --   c2 - The second city.
 -- Returns:
@@ -51,7 +51,7 @@ areAdjacent roadmap c1 c2 = any (\(city1,city2,_) -> (city1 == c1 && city2 == c2
 
 -- | Returns the distance between two cities if they are directly connected.
 -- Arguments:
---   roadmap - A list of tuples representing the roadmap, where each tuple contains two cities and their distance.
+--   roadmap - A list of tuples where each tuple represents a road connecting two cities and their distance.
 --   c1 - The first city.
 --   c2 - The second city.
 -- Returns:
@@ -106,14 +106,14 @@ pathDistance road (x:y:xs) =
 -- | Identifies all cities that have the maximum number of adjacent connections in the roadmap.
 -- This function counts how many adjacent cities each city has and returns a list of cities that have the highest number of connections.
 -- Arguments:
---   road - A list of tuples representing the roadmap, where each tuple contains two cities and their distance.
+--   road - A list of tuples where each tuple represents a road connecting two cities and their distance.
 -- Returns:
 --   A list of cities that have the highest number of adjacent connections.
 -- Time Complexity: O(n), where n is the number of cities in the roadmap.
 -- Space Complexity: O(n), for storing counts of adjacent connections.
 
 rome :: RoadMap -> [City]
-rome road = 
+rome road =
     let
         counts = [(city, countAdjacent road city) | city <- cities road]
         maxCount = maximum (map snd counts)
@@ -123,15 +123,15 @@ rome road =
 
 -- | Counts the number of cities adjacent to a given city in the roadmap.
 -- Arguments:
---   roadmap - A list of tuples representing the roadmap, where each tuple contains two cities and their distance.
+--   roadmap - A list of tuples where each tuple represents a road connecting two cities and their distance.
 --   city - The city for which adjacent connections are counted.
 -- Returns:
 --   The total number of adjacent cities.
 -- Time Complexity: O(n), where n is the number of roads in the roadmap.
 -- Space Complexity: O(1)
 countAdjacent :: RoadMap -> City -> Int
-countAdjacent roadmap city = 
-    length [() | (c1,c2,_) <- roadmap, city `elem` [c1,c2]] 
+countAdjacent roadmap city =
+    length [() | (c1,c2,_) <- roadmap, city `elem` [c1,c2]]
 
 -- |Performs a BFS on the given roadmap starting from a specified city.
 -- This function returns a list of all the cities reachable from the start city.
@@ -170,9 +170,24 @@ isStronglyConnected roadmap=
 shortestPath :: RoadMap -> City -> City -> [Path]
 shortestPath = undefined
 
--- Custom function to find the minimum by comparing the first element of tuples
+-- | This function sorts tuples by their first element in ascending order and returns the smallest tuple.
+-- Arguments:
+--   A list of tuples, where each tuple's first element is of an Ord type.
+-- Returns:
+--   The tuple with the smallest first element.
+-- Time Complexity: O(n) for finding the minimum in an unsorted list.
+-- Space Complexity: O(1)
+
 minByFirst :: Ord a => [(a, b)] -> (a, b)
 minByFirst = Data.List.minimumBy (\(a, _) (b, _) -> compare a b)
+
+ 
+-- Arguments:
+--   roadmap - A list of tuples where each tuple represents a road connecting two cities and their distance.
+-- Returns:
+--   A list of cities representing the shortest path that visits each city.
+-- Time Complexity: O(n * 2^n), where n is the number of cities.
+-- Space Complexity: O(2^n) for memoization storage.
 
 travelSales :: RoadMap -> Path
 travelSales roadmap =
@@ -184,25 +199,28 @@ travelSales roadmap =
 
         tsp :: Int -> Int -> Data.Array.Array (Int, Int) (Maybe (Distance, Path)) -> (Maybe (Distance, Path), Data.Array.Array (Int, Int) (Maybe (Distance, Path)))
         tsp bitmask pos memoArr
-            | bitmask == maxBitmask = (Just (0, [allCities !! pos]), memoArr)  -- All cities visited, return to start
-            | otherwise = 
+            | bitmask == maxBitmask = (Just (0, [allCities !! pos]), memoArr)
+            | otherwise =
                 case memoArr Data.Array.! (bitmask, pos) of
-                    Just result -> (Just result, memoArr)  -- Memoized result found
-                    Nothing -> 
-                        let possiblePaths = [(d + nextDist, allCities !! pos : nextPath) | 
-                                next <- [0..n-1], 
-                                next /= pos,
-                                (bitmask Data.Bits..&. (1 `Data.Bits.shiftL` next)) == 0,  -- City not yet visited
-                                Just d <- [distance roadmap (allCities !! pos) (allCities !! next)],  -- Distance is defined
-                                let (nextResult, newMemo) = tsp (bitmask Data.Bits..|. (1 `Data.Bits.shiftL` next)) next memoArr,
-                                Just (nextDist, nextPath) <- [nextResult]]
+                    Just result -> (Just result, memoArr)
+                    Nothing ->
+                        let possiblePaths = [(d + nextDist, allCities !! pos : nextPath) |
+                                               next <- [0 .. n - 1],
+                                               next /= pos,
+                                               (bitmask Data.Bits..&. (1 `Data.Bits.shiftL` next)) == 0,
+                                               let (nextResult, newMemo)
+                                                     = tsp
+                                                         (bitmask Data.Bits..|. (1 `Data.Bits.shiftL` next)) next memoArr,
+                                               Just d <- [distance
+                                                            roadmap (allCities !! pos) (allCities !! next)],
+                                               Just (nextDist, nextPath) <- [nextResult]]
                             minPath = if null possiblePaths then Nothing else Just (minByFirst possiblePaths)
                             updatedMemo = memoArr Data.Array.// [((bitmask, pos), minPath)]
                         in (minPath, updatedMemo)
-        
+
     in case tsp 1 0 memo of
-        (Nothing, _) -> []  -- No path found
-        (Just (_, path), _) -> path ++ [head path]  -- Path found, close the cycle by adding start city at the end
+        (Nothing, _) -> []
+        (Just (_, path), _) -> path ++ [head path]
         
 tspBruteForce :: RoadMap -> Path
 tspBruteForce = undefined -- only for groups of 3 people; groups of 2 people: do not edit this function
