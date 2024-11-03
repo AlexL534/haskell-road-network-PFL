@@ -18,9 +18,9 @@ type Prelude = [(City,City)]
 type PQueue = [(City,Distance)]
 
 -- | Returns a list of all cities present in the given roadmap
--- It removes duplicates using the auxiliary function removeDuplicates
+-- Removes duplicates using the auxiliary function removeDuplicates
 -- Arguments:
---   roadmap - A list of tuples where each tuple represents a road connecting two cities and their distance.
+--   roadmap - A list of tuples where each tuple represents a road connecting two cities and their distance
 -- Returns:
 --   A list of cities present in the roadmap, without duplicates
 -- Time Complexity: O(n log n)
@@ -32,7 +32,7 @@ cities roadmap = removeDuplicates [city | (city1, city2, _) <- roadmap, city <- 
 -- | Auxiliary function to remove duplicates from a list using sorting and grouping
 -- This functions assumes that the elements are of an Ord type to enable sorting
 -- Arguments:
--- A list of elements of type a, where a is a type that has an Ord instance
+-- xs - A list of elements of type a, where a is a type that has an Ord instance
 -- Returns:
 -- A list of unique elements
 -- Time Complexity : O(n log n) due to sorting, followed by O(n) for grouping
@@ -44,8 +44,8 @@ removeDuplicates = map head . Data.List.group . Data.List.sort
 -- | Checks if two cities are directly connected in the given roadmap.
 -- Arguments:
 --   roadmap - A list of tuples where each tuple represents a road connecting two cities and their distance.
---   c1 - The first city.
---   c2 - The second city.
+--   c1 - The first city
+--   c2 - The second city
 -- Returns:
 --   True if there is a direct road between c1 and c2, otherwise False.
 -- Time Complexity : O(n)
@@ -54,13 +54,13 @@ removeDuplicates = map head . Data.List.group . Data.List.sort
 areAdjacent :: RoadMap -> City -> City -> Bool
 areAdjacent roadmap c1 c2 = any (\(city1,city2,_) -> (city1 == c1 && city2 == c2) || (city1 == c2 && city2 == c1)) roadmap
 
--- | Returns the distance between two cities if they are directly connected.
+-- | Returns the distance between two cities if they are directly connected
 -- Arguments:
---   roadmap - A list of tuples where each tuple represents a road connecting two cities and their distance.
---   c1 - The first city.
---   c2 - The second city.
+--   roadmap - A list of tuples where each tuple represents a road connecting two cities and their distance
+--   c1 - The first city
+--   c2 - The second city
 -- Returns:
---   Just the distance if the cities are directly connected, otherwise Nothing.
+--   Just the distance if the cities are directly connected, otherwise Nothing
 -- Time Complexity : O(n)
 -- Space Complexity : O(n)
 
@@ -71,17 +71,16 @@ distance roadmap c1 c2 =
     (distance:_) -> Just distance
 
 
--- | Returns a list of adjacent cities and distances from a given city.
+-- | Returns a list of adjacent cities and distances from a given city
 -- Arguments:
---   roadmap - A list of tuples where each tuple represents a road connecting two cities and their distance.
---   city - The city whose adjacent cities we want to find.
+--   roadmap - A list of tuples where each tuple represents a road connecting two cities and their distance
+--   city - The city whose adjacent cities we want to find
 -- Returns:
---   A list of tuples where each tuple contains a city directly connected to the input city and the distance to it.
--- Time Complexity: O(n) where n is the number of roads in the roadmap (due to the list traversal).
--- Space Complexity: O(a) where a is the number of adjacent cities.
+--   A list of tuples where each tuple contains a city directly connected to the input city and the distance to it
+-- Time Complexity: O(n) where n is the number of roads in the roadmap (due to the list traversal)
+-- Space Complexity: O(a) where a is the number of adjacent cities
 
 adjacent :: RoadMap -> City -> [(City,Distance)]
---adjacent road city= [(c, d) | (c1,c,d) <- road, c1==city] ++ [(c1, d) | (c1,c,d) <- road, c==city]
 adjacent [] city=[]
 adjacent rd city
     | c1==city = (c2,d) : adjacent (tail rd) city
@@ -89,13 +88,13 @@ adjacent rd city
     | otherwise = adjacent (tail rd) city
     where (c1,c2,d) = head rd
 
--- | Calculates the total distance of a given path through the roadmap.
+-- | Calculates the total distance of a given path through the roadmap
 -- Arguments:
---   roadmap - A list of tuples where each tuple represents a road connecting two cities and their distance.
---   path - A list of cities representing the path.
+--   roadmap - A list of tuples where each tuple represents a road connecting two cities and their distance
+--   path - A list of cities representing the path
 -- Returns:
---   Just the total distance if the path is valid (i.e., all consecutive cities are connected), otherwise Nothing.
--- Time Complexity: O(p * n), where p is the length of the path and n is the number of roads (for each pair lookup).
+--   Just the total distance if the path is valid (i.e., all consecutive cities are connected), otherwise Nothing
+-- Time Complexity: O(p * n), where p is the length of the path and n is the number of roads (for each pair lookup)
 -- Space Complexity: O(1) 
 
 pathDistance :: RoadMap -> Path -> Maybe Distance
@@ -108,14 +107,14 @@ pathDistance road (x:y:xs) =
             Nothing->Nothing
             Just tdis -> Just (dis + tdis)
 
--- | Identifies all cities that have the maximum number of adjacent connections in the roadmap.
--- This function counts how many adjacent cities each city has and returns a list of cities that have the highest number of connections.
+-- | Identifies all cities that have the maximum number of adjacent connections in the roadmap
+-- This function counts how many adjacent cities each city has and returns a list of cities that have the highest number of connections
 -- Arguments:
---   road - A list of tuples where each tuple represents a road connecting two cities and their distance.
+--   road - A list of tuples where each tuple represents a road connecting two cities and their distance
 -- Returns:
---   A list of cities that have the highest number of adjacent connections.
--- Time Complexity: O(n), where n is the number of cities in the roadmap.
--- Space Complexity: O(n), for storing counts of adjacent connections.
+--   A list of cities that have the highest number of adjacent connections
+-- Time Complexity: O(n), where n is the number of cities in the roadmap
+-- Space Complexity: O(n), for storing counts of adjacent connections
 
 rome :: RoadMap -> [City]
 rome road =
@@ -126,26 +125,26 @@ rome road =
 
     in maxCities
 
--- | Counts the number of cities adjacent to a given city in the roadmap.
+-- | Counts the number of cities adjacent to a given city in the roadmap
 -- Arguments:
---   roadmap - A list of tuples where each tuple represents a road connecting two cities and their distance.
---   city - The city for which adjacent connections are counted.
+--   roadmap - A list of tuples where each tuple represents a road connecting two cities and their distance
+--   city - The city for which adjacent connections are counted
 -- Returns:
---   The total number of adjacent cities.
--- Time Complexity: O(n), where n is the number of roads in the roadmap.
+--   The total number of adjacent cities
+-- Time Complexity: O(n), where n is the number of roads in the roadmap
 -- Space Complexity: O(1)
 countAdjacent :: RoadMap -> City -> Int
 countAdjacent roadmap city =
     length [() | (c1,c2,_) <- roadmap, city `elem` [c1,c2]]
 
--- |Performs a BFS on the given roadmap starting from a specified city.
--- This function returns a list of all the cities reachable from the start city.
+-- |Performs a BFS on the given roadmap starting from a specified city
+-- This function returns a list of all the cities reachable from the start city
 -- Arguments:
---  roadmap - A list of tuples where each tuple represents a road connecting two cities and their distance.
--- startCity - The city from where the search begins.
+--  roadmap - A list of tuples where each tuple represents a road connecting two cities and their distance
+-- startCity - The city from where the search begins
 -- Returns:
---  A list of cities reachable from startCity without duplicates.
--- Time Complexity: O(V + E), where V is the number of cities and E is the number of edges (roads).
+--  A list of cities reachable from startCity without duplicates
+-- Time Complexity: O(V + E), where V is the number of cities and E is the number of edges (roads)
 -- Space Complexity: O(V)
 
 bfs :: RoadMap -> City -> [City]
@@ -158,13 +157,13 @@ bfs roadmap startCity = bfs' [startCity] []
             where
                 unvisitedNeighbors = [neighbor | (neighbor, _) <- adjacent roadmap x, neighbor `notElem` visited]
 
--- | Checks if the given roadmap is strongly connected.
--- A roadmap is strongly connected if all cities are reachable from any starting city.
+-- | Checks if the given roadmap is strongly connected
+-- A roadmap is strongly connected if all cities are reachable from any starting city
 -- Arguments:
---   roadmap - A list of tuples where each tuple represents a road connecting two cities and their distance.
+--   roadmap - A list of tuples where each tuple represents a road connecting two cities and their distance
 -- Returns:
---   True if all cities are reachable from any starting city, otherwise False.
--- Time Complexity: O(V + E), where V is the number of cities and E is the number of roads.
+--   True if all cities are reachable from any starting city, otherwise False
+-- Time Complexity: O(V + E), where V is the number of cities and E is the number of roads
 -- Space Complexity: O(V)
 
 isStronglyConnected :: RoadMap -> Bool
@@ -173,52 +172,63 @@ isStronglyConnected roadmap=
     in (null allCities || (length allCities == length (bfs roadmap (head allCities))))
 
 
--- Creates a list with all cities and their distance to the source (all distances start at 9999 expect for the source city that starts at 0)
+-- | Creates a list with all cities and their distance to the source
+-- All distances start at 9999 except for the source city that starts at 0
 -- Arguments:
 --  road - The graph
 --  city - The starting position
 -- Time Complexity: O(V)
--- Space Complexity:
+-- Space Complexity: O(V)
 initializeDistToSourceList :: RoadMap -> City -> [(City,Distance)]
 initializeDistToSourceList road city =  [(c,9999) | c<-cities road,c/=city] ++ [(city,0)]
 
 
--- Adds and/or updates multiple tuples of (City,Distance) to a priority queue and makes sure that the first element is the one closest to the source
+-- | Adds and/or updates multiple tuples of (City,Distance) to a priority queue and ensures that the first element is the one closest to the source
 -- Arguments:
---  pq - Priority queue that is going to recive/update values
---  newDist - List of tuples that is added to the priority queue or used to updated it 
+--  pq - Priority queue that is going to receive/update values
+--  newDist - List of tuples that are added to the priority queue or used to update it 
+-- Time Complexity: O(M log M), where M is the size of the priority queue after adding/updating values, due to sorting the priority queue at the end
+-- Space Complexity: O(M) for storing the updated priority queue
 addPQueue :: PQueue -> [(City,Distance)] -> PQueue
 addPQueue pq newDist = Data.List.sortOn snd ([if fst p `elem` map fst newDist then (fst p,snd (head (filter (\u->fst u == fst p) newDist))) else p | p <-pq ] ++ [nd | nd <- newDist , fst nd `notElem` map fst pq])
 
--- Updates the List of distances to the source
+-- | Updates the list of distances to the source city
 -- Arguments:
---  pq - List of cities and their distance to the source
---  newV - Values used to update the list
+--  pq - List of cities and their current distances to the source
+--  newV - Values used to update the distances in the list
+-- Time Complexity: O(N^2), where N is the size of the priority queue, due to the use of `filter` within a list comprehension.
+-- Space Complexity: O(1), as it produces a new list without additional storage.
 updateDistToSourceList :: PQueue->[(City,Distance)] ->PQueue
 updateDistToSourceList pq newV= [if fst p `elem` map fst newV then (fst p, snd (head (filter (\u->fst u == fst p) newV))) else p | p <-pq]
 
 
--- Creates a Adjacency list for all the cities in a graph
+-- Creates an adjacency list for all the cities in a graph
 -- Arguments:
---  road - The graph
+-- road - The graph
 -- cities - List of cities that belong to the graph
+-- Time Complexity: O(V), where V is the number of cities
+-- Space Complexity: O(V + E), where E is the number of edges, for storing the adjacency list
 initializeAdjList :: RoadMap ->[City] -> AdjList
 initializeAdjList road []=[]
 initializeAdjList road cities= (head cities,adjacent road (head cities)) : initializeAdjList road (tail cities)
 
--- Gets a list of adjacent cities and their distance
+-- Gets a list of adjacent cities and their distances from a given adjacency list
 -- Arguments:
---  adj - adjacency list
---  c - city to get adjacents from
+--  adj - Adjacency list
+--  c - The city for which to retrieve adjacent cities
+-- Time Complexity: O(N), where N is the number of entries in the adjacency list for the given city
+-- Space Complexity: O(1), as it returns a list of tuples without additional storage
 getAdj :: AdjList->City -> [(City,Distance)]
 getAdj adj c= snd (head (filter (\(a,b)->a==c) adj))
 
--- uses the head of the priority queue and it's adjacent cities to see if their distance to the source can become smaller
+-- Uses the head of the priority queue and it's adjacent cities to see if their distance to the source can become smaller
 -- Arguments:
 --  pqueue - Priority queue
 --  distsToSource - List of tuples with a city and it's distance to the source
 --  adj - List of adjacents to the head of the pqueue
--- Return a list with tuples of cities that can get a shorter distance to source and their new distance, later used for the updateDistToSource and addPQueue functions
+-- Returns a list with tuples of cities that can get a shorter distance to the source and their new distance, later used for the updateDistToSource and addPQueue functions
+-- Time Complexity: O(N), where N is the number of adjacent cities.
+-- Space Complexity: O(1), as it returns a new list without additional storage.
 getNewDist :: PQueue -> [(City,Distance)]-> [(City,Distance)] -> [(City,Distance)]
 getNewDist pqueue distsToSource []=[]
 getNewDist pqueue distsToSource adj
@@ -231,19 +241,23 @@ getNewDist pqueue distsToSource adj
         adjToSource = snd (head pqueue)
 
 
--- Recieves a prelude a city (source) and a list of cities and uses them to update the prelude
+-- Receives a prelude, a city (source), and a list of cities and uses them to update the prelude
 -- Arguments:
 --  prelude - Prelude to be updated
---  source - city that the other will point to
---  cities - cities that will point to a new city or be added for the first time 
+--  source - City that the other will point to
+--  cities - Cities that will point to a new city or be added for the first time 
+-- Time Complexity: O(N), where N is the size of the prelude
+-- Space Complexity: O(M), where M is the number of cities being added to the prelude
 updatePrelude :: Prelude -> City ->[City]->Prelude
 updatePrelude prelude source cities = [if fst pr `elem` cities then (fst pr , source) else pr | pr <- prelude] ++ [(c,source) | c<-cities, c `notElem` map fst prelude]
 
--- Transforms a prelude into a path by receiving a destination checking if it has a prelude and adding it to the path until dest==source
+-- Transforms a prelude into a path by receiving a destination, checking if it has a prelude and adding it to the path until dest == source
 -- Arguments:
---  source - starting city
---  dest - city currently being checked
---  prelude - prelude that will be transformed
+--  source - Starting city
+--  dest - City currently being checked
+--  prelude - Prelude that will be transformed
+-- Time Complexity: O(N), where N is the length of the prelude.
+-- Space Complexity: O(N), as it builds a new path list.
 getPathFormPrelude:: City->City ->Prelude -> Path
 getPathFormPrelude source dest prelude
     | source == dest =[]
@@ -252,16 +266,18 @@ getPathFormPrelude source dest prelude
     where
         prevCity = snd (head (filter (\u-> fst u == dest) prelude))
 
--- aux function for shortest path that uses the dijstra algorithm to search for the shortest path
+-- Auxiliary function for shortest path that uses the Dijkstra's algorithm to search for the shortest path
 -- Arguments:
 --  road - Graph
 --  source - Starting city
 --  dest - City the function is trying to reach
---  pqueque - Priority queue that always as the city closest to source as it's head
---  disToSource - List with all the cities and their current distance to the source
+--  pqueque - Priority queue that always has the city closest to source as its head
+--  distToSource - List with all the cities and their current distance to the source
 --  adjList - List with all the cities and their adjacent cities
---  prelude - prelude that is being constructed by the function
+--  prelude - Prelude that is being constructed by the function
 -- Returns a prelude that a path can be derived from
+-- Time Complexity: O(E), where E is the number of edges in the graph
+-- Space Complexity: O(V), where V is the number of vertices (cities) in the graph
 shortestPath' :: RoadMap -> City -> City -> PQueue -> [(City,Distance)]-> AdjList -> Prelude -> Prelude
 shortestPath' road source dest [] distToSource adjList prelude= prelude -- ends when the priority queue is empty witch means that no more cities can get better distances 
 shortestPath' road source dest pqueue disToSource adjList prelude = shortestPath' road source dest updatedPqueue updatedDisToSource adjList updatedPrelude
@@ -274,10 +290,12 @@ shortestPath' road source dest pqueue disToSource adjList prelude = shortestPath
         cities = map fst newDists -- gets the cities that get a better distance
         updatedPrelude = updatePrelude prelude city cities -- and updates the prelude with them
 
--- Returns the total distance of a path (only works if the path exists aux for allPaths)
+-- Returns the total distance of a path (only works if the path exists, aux for allPaths)
 -- Arguments:
 --  road - Graph
 --  (x:y:xs) - Path
+-- Time Complexity: O(N), where N is the length of the path.
+-- Space Complexity: O(1), as it calculates the distance without additional storage.
 pathDistanceInt :: RoadMap -> Path -> Distance
 pathDistanceInt road [] = 0
 pathDistanceInt road [_] = 0
@@ -285,18 +303,20 @@ pathDistanceInt road (x:y:xs) =  if x/=y then dist + pathDistanceInt road (y:xs)
     where
         dist=  head [distance | (city1, city2, distance) <- road, (city1 == x && city2 == y) || (city1 == y && city2 == x)]
 
--- Searches all paths and stop if detects the cost is already bigger than the minCost found by the dijstra's algorithm
+-- Searches all paths and stops if it detects that the cost is already bigger than the minCost found by the Dijkstra's algorithm
 -- Arguments:
---  road - Grapth
+--  road - Graph
 --  adjList - List with all cities and their adjacent cities
---  minCost - Minimal cost for a path calculated by dijstra
---  source - Starting city/ city being checked
+--  minCost - Minimal cost for a path calculated by Dijkstra
+--  source - Starting city / city being checked
 --  dest - Destination city
 --  visited - List that keeps track of cities alread visited
 --  paths - List that contains all minimal cost paths
 --  currentPath - Path being cheked
 --  currentPathCost - Cost of the path being cheked
--- Returns list of all paths that have the mininal cost and reach the destination
+-- Returns a list of all paths that have the mininal cost and reach the destination
+-- Time Complexity: O(V^2), where V is the number of vertices (cities)
+-- Space Complexity: O(V), where V is the number of paths stored
 allPaths:: RoadMap -> AdjList -> Distance -> City -> City -> [City] -> [Path] -> Path -> Distance -> [Path]
 allPaths road adjList minCost source dest visited paths currentPath currentPathCost
     | source == dest = let pathCost =  pathDistanceInt road currentPath -- if city that is being checked equals dest calculate pathCost of currentPath
@@ -312,11 +332,14 @@ allPaths road adjList minCost source dest visited paths currentPath currentPathC
             | otherwise = allPaths road adjList minCost ad dest (ad:visited) paths (ad:currentPath) (currentPathCost+dist) -- continue searching path
 
 
--- uses helper functions shortestPath' and allPaths to get a list o all paths with minimal cost
+-- Uses helper functions shortestPath' and allPaths to get a list of all paths with minimal cost
 -- Arguments:
 --  road - Graph
---  source - starting city
---  dest - ending city
+--  source - Starting city
+--  dest - Ending city
+-- Returns a list of paths with minimal cost
+-- Time Complexity: O(V^2), where V is the number of vertices (cities)
+-- Space Complexity: O(V), where V is the number of paths stored
 shortestPath :: RoadMap -> City -> City -> [Path]
 shortestPath road source dest
     | source==dest = [[source]] -- shortest path between a city and itself
