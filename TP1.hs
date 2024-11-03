@@ -172,22 +172,53 @@ isStronglyConnected roadmap=
     let allCities = cities roadmap
     in (null allCities || (length allCities == length (bfs roadmap (head allCities))))
 
-initializePQueue :: RoadMap -> City -> [(City,Distance)]
-initializePQueue road city = Data.List.sortOn snd ([(c,9999) | c<-cities road,c/=city] ++ [(city,0)])
 
+-- Creates a list with all cities and their distance to the source (all distances start at 9999 expect for the source city that starts at 0)
+-- Arguments:
+--  road - The graph
+--  city - The starting position
+-- Time Complexity: O(V)
+-- Space Complexity:
+initializeDistToSourceList :: RoadMap -> City -> [(City,Distance)]
+initializeDistToSourceList road city =  [(c,9999) | c<-cities road,c/=city] ++ [(city,0)]
+
+
+-- Adds and/or updates multiple tuples of (City,Distance) to a priority queue and makes sure that the first element is the one closest to the source
+-- Arguments:
+--  pq - Priority queue that is going to recive/update values
+--  newDist - List of tuples that is added to the priority queue or used to updated it 
 addPQueue :: PQueue -> [(City,Distance)] -> PQueue
 addPQueue pq newDist = Data.List.sortOn snd ([if fst p `elem` map fst newDist then (fst p,snd (head (filter (\u->fst u == fst p) newDist))) else p | p <-pq ] ++ [nd | nd <- newDist , fst nd `notElem` map fst pq])
 
-updatePQueue :: PQueue->[(City,Distance)] ->PQueue
-updatePQueue pq newV= Data.List.sortOn snd ([if fst p `elem` map fst newV then (fst p, snd (head (filter (\u->fst u == fst p) newV))) else p | p <-pq])
+-- Updates the List of distances to the source
+-- Arguments:
+--  pq - List of cities and their distance to the source
+--  newV - Values used to update the list
+updateDistToSourceList :: PQueue->[(City,Distance)] ->PQueue
+updateDistToSourceList pq newV= [if fst p `elem` map fst newV then (fst p, snd (head (filter (\u->fst u == fst p) newV))) else p | p <-pq]
 
+
+-- Creates a Adjacency list for all the cities in a graph
+-- Arguments:
+--  road - The graph
+-- cities - List of cities that belong to the graph
 initializeAdjList :: RoadMap ->[City] -> AdjList
 initializeAdjList road []=[]
 initializeAdjList road cities= (head cities,adjacent road (head cities)) : initializeAdjList road (tail cities)
 
+-- Gets a list of adjacent cities and their distance
+-- Arguments:
+--  adj - adjacency list
+--  c - city to get adjacents from
 getAdj :: AdjList->City -> [(City,Distance)]
 getAdj adj c= snd (head (filter (\(a,b)->a==c) adj))
 
+-- uses the head of the priority queue and it's adjacent cities to see if their distance to the source can become smaller
+-- Arguments:
+--  pqueue - Priority queue
+--  distsToSource - List of tuples with a city and it's distance to the source
+--  adj - List of adjacents to the head of the pqueue
+-- Return a list with tuples of cities that can get a shorter distance to source and their new distance, later used for the updateDistToSource and addPQueue functions
 getNewDist :: PQueue -> [(City,Distance)]-> [(City,Distance)] -> [(City,Distance)]
 getNewDist pqueue distsToSource []=[]
 getNewDist pqueue distsToSource adj
@@ -195,14 +226,24 @@ getNewDist pqueue distsToSource adj
     | otherwise = getNewDist pqueue distsToSource (tail adj)
     where
         c = fst (head adj)
-        distTosource = snd (head (filter (\(a,b)->a==c) distsToSource))
+        distTosource = snd (head (filter (\(a,b)->a==c) distsToSource)) -- current distance to source of the adjacent being checked
         distToAdj = snd (head adj)
         adjToSource = snd (head pqueue)
 
 
+-- Recieves a prelude a city (source) and a list of cities and uses them to update the prelude
+-- Arguments:
+--  prelude - Prelude to be updated
+--  source - city that the other will point to
+--  cities - cities that will point to a new city or be added for the first time 
 updatePrelude :: Prelude -> City ->[City]->Prelude
 updatePrelude prelude source cities = [if fst pr `elem` cities then (fst pr , source) else pr | pr <- prelude] ++ [(c,source) | c<-cities, c `notElem` map fst prelude]
 
+-- Transforms a prelude into a path by receiving a destination checking if it has a prelude and adding it to the path until dest==source
+-- Arguments:
+--  source - starting city
+--  dest - city currently being checked
+--  prelude - prelude that will be transformed
 getPathFormPrelude:: City->City ->Prelude -> Path
 getPathFormPrelude source dest prelude
     | source == dest =[]
@@ -211,20 +252,32 @@ getPathFormPrelude source dest prelude
     where
         prevCity = snd (head (filter (\u-> fst u == dest) prelude))
 
+-- aux function for shortest path that uses the dijstra algorithm to search for the shortest path
+-- Arguments:
+--  road - Graph
+--  source - Starting city
+--  dest - City the function is trying to reach
+--  pqueque - Priority queue that always as the city closest to source as it's head
+--  disToSource - List with all the cities and their current distance to the source
+--  adjList - List with all the cities and their adjacent cities
+--  prelude - prelude that is being constructed by the function
+-- Returns a prelude that a path can be derived from
 shortestPath' :: RoadMap -> City -> City -> PQueue -> [(City,Distance)]-> AdjList -> Prelude -> Prelude
-
-shortestPath' road source dest [] distToSource adjList prelude= prelude
-
+shortestPath' road source dest [] distToSource adjList prelude= prelude -- ends when the priority queue is empty witch means that no more cities can get better distances 
 shortestPath' road source dest pqueue disToSource adjList prelude = shortestPath' road source dest updatedPqueue updatedDisToSource adjList updatedPrelude
     where
-        city = fst (head pqueue)
-        adjs = getAdj adjList city
-        newDists = getNewDist pqueue disToSource adjs
-        updatedDisToSource = updatePQueue disToSource newDists
-        updatedPqueue = addPQueue (tail pqueue) newDists
-        cities = map fst newDists
-        updatedPrelude = updatePrelude prelude city cities
+        city = fst (head pqueue) -- gets closes city to source
+        adjs = getAdj adjList city -- adjacents of the closest city to source
+        newDists = getNewDist pqueue disToSource adjs -- check if any of them can get a smaller distance
+        updatedDisToSource = updateDistToSourceList disToSource newDists -- if so updates the disToSource list
+        updatedPqueue = addPQueue (tail pqueue) newDists -- and the priority queue
+        cities = map fst newDists -- gets the cities that get a better distance
+        updatedPrelude = updatePrelude prelude city cities -- and updates the prelude with them
 
+-- Returns the total distance of a path (only works if the path exists aux for allPaths)
+-- Arguments:
+--  road - Graph
+--  (x:y:xs) - Path
 pathDistanceInt :: RoadMap -> Path -> Distance
 pathDistanceInt road [] = 0
 pathDistanceInt road [_] = 0
@@ -232,33 +285,50 @@ pathDistanceInt road (x:y:xs) =  if x/=y then dist + pathDistanceInt road (y:xs)
     where
         dist=  head [distance | (city1, city2, distance) <- road, (city1 == x && city2 == y) || (city1 == y && city2 == x)]
 
+-- Searches all paths and stop if detects the cost is already bigger than the minCost found by the dijstra's algorithm
+-- Arguments:
+--  road - Grapth
+--  adjList - List with all cities and their adjacent cities
+--  minCost - Minimal cost for a path calculated by dijstra
+--  source - Starting city/ city being checked
+--  dest - Destination city
+--  visited - List that keeps track of cities alread visited
+--  paths - List that contains all minimal cost paths
+--  currentPath - Path being cheked
+--  currentPathCost - Cost of the path being cheked
+-- Returns list of all paths that have the mininal cost and reach the destination
 allPaths:: RoadMap -> AdjList -> Distance -> City -> City -> [City] -> [Path] -> Path -> Distance -> [Path]
 allPaths road adjList minCost source dest visited paths currentPath currentPathCost
-    | source == dest = let pathCost =  pathDistanceInt road currentPath
-        in if pathCost == minCost then  reverse currentPath : paths else  paths
-    | otherwise =  foldl allPathsAux paths adjs
+    | source == dest = let pathCost =  pathDistanceInt road currentPath -- if city that is being checked equals dest calculate pathCost of currentPath
+        in if pathCost == minCost then  reverse currentPath : paths else  paths -- if pathCost == minCost add currentPath to the paths list else return paths
+    | otherwise =  foldl allPathsAux paths adjs -- continues searching for paths
     where
-        
-        
-        adjs =  getAdj adjList source 
+
+
+        adjs =  getAdj adjList source
         allPathsAux  paths (ad,dist)
-            | ad `elem` visited = paths
-            | currentPathCost + dist > minCost = paths
-            | otherwise = allPaths road adjList minCost ad dest (ad:visited) paths (ad:currentPath) (currentPathCost+dist)
+            | ad `elem` visited = paths -- if adjacent as already been visited stop searching this path (avoids loops)
+            | currentPathCost + dist > minCost = paths -- if the cost of the currentPath + the cost of adding the edge is bigger than minCost stop searching path
+            | otherwise = allPaths road adjList minCost ad dest (ad:visited) paths (ad:currentPath) (currentPathCost+dist) -- continue searching path
 
 
+-- uses helper functions shortestPath' and allPaths to get a list o all paths with minimal cost
+-- Arguments:
+--  road - Graph
+--  source - starting city
+--  dest - ending city
 shortestPath :: RoadMap -> City -> City -> [Path]
 shortestPath road source dest
-    | source==dest = [[source]]
+    | source==dest = [[source]] -- shortest path between a city and itself
     | otherwise= if null dijkstraSP then [] else paths
     where
-        pqueue = [(source,0)]
-        distToSource = initializePQueue road source
+        pqueue = [(source,0)] -- start priority queue used by the dijstra algorithm
+        distToSource = initializeDistToSourceList road source
         adjacentList = initializeAdjList road (cities road)
-        prelude = shortestPath' road source dest pqueue distToSource adjacentList []
-        dijkstraSP = getPathFormPrelude source dest prelude
-        dijkstraDistance = pathDistanceInt road (dest : dijkstraSP)
-        paths= allPaths road adjacentList dijkstraDistance source dest [source] [] [source] 0
+        prelude = shortestPath' road source dest pqueue distToSource adjacentList [] -- uses dijstra's algorithm to calculete a shortest path
+        dijkstraSP = getPathFormPrelude source dest prelude -- turns the prelude into a path
+        dijkstraDistance = pathDistanceInt road (dest : dijkstraSP) -- gets cost of the path calculeted by dijstra's
+        paths= allPaths road adjacentList dijkstraDistance source dest [source] [] [source] 0 -- calls allPath with source already visited and in the current path
 
 
 travelSales :: RoadMap -> Path
