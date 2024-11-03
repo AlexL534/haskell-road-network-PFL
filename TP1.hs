@@ -20,7 +20,7 @@ type PQueue = [(City,Distance)]
 -- | Returns a list of all cities present in the given roadmap
 -- It removes duplicates using the auxiliary function removeDuplicates
 -- Arguments:
---   roadmap - A list of tuples where each tuple represents a road connecting two cities and their distance
+--   roadmap - A list of tuples where each tuple represents a road connecting two cities and their distance.
 -- Returns:
 --   A list of cities present in the roadmap, without duplicates
 -- Time Complexity: O(n log n)
@@ -43,7 +43,7 @@ removeDuplicates = map head . Data.List.group . Data.List.sort
 
 -- | Checks if two cities are directly connected in the given roadmap.
 -- Arguments:
---   roadmap - A list of tuples representing the roadmap, where each tuple contains two cities and their distance.
+--   roadmap - A list of tuples where each tuple represents a road connecting two cities and their distance.
 --   c1 - The first city.
 --   c2 - The second city.
 -- Returns:
@@ -56,7 +56,7 @@ areAdjacent roadmap c1 c2 = any (\(city1,city2,_) -> (city1 == c1 && city2 == c2
 
 -- | Returns the distance between two cities if they are directly connected.
 -- Arguments:
---   roadmap - A list of tuples representing the roadmap, where each tuple contains two cities and their distance.
+--   roadmap - A list of tuples where each tuple represents a road connecting two cities and their distance.
 --   c1 - The first city.
 --   c2 - The second city.
 -- Returns:
@@ -111,7 +111,7 @@ pathDistance road (x:y:xs) =
 -- | Identifies all cities that have the maximum number of adjacent connections in the roadmap.
 -- This function counts how many adjacent cities each city has and returns a list of cities that have the highest number of connections.
 -- Arguments:
---   road - A list of tuples representing the roadmap, where each tuple contains two cities and their distance.
+--   road - A list of tuples where each tuple represents a road connecting two cities and their distance.
 -- Returns:
 --   A list of cities that have the highest number of adjacent connections.
 -- Time Complexity: O(n), where n is the number of cities in the roadmap.
@@ -128,7 +128,7 @@ rome road =
 
 -- | Counts the number of cities adjacent to a given city in the roadmap.
 -- Arguments:
---   roadmap - A list of tuples representing the roadmap, where each tuple contains two cities and their distance.
+--   roadmap - A list of tuples where each tuple represents a road connecting two cities and their distance.
 --   city - The city for which adjacent connections are counted.
 -- Returns:
 --   The total number of adjacent cities.
@@ -331,8 +331,64 @@ shortestPath road source dest
         paths= allPaths road adjacentList dijkstraDistance source dest [source] [] [source] 0 -- calls allPath with source already visited and in the current path
 
 
+-- | This function sorts tuples by their first element in ascending order and returns the smallest tuple.
+-- Arguments:
+--   A list of tuples, where each tuple's first element is of an Ord type.
+-- Returns:
+--   The tuple with the smallest first element.
+-- Time Complexity: O(n) for finding the minimum in an unsorted list.
+-- Space Complexity: O(1)
+
+minByFirst :: Ord a => [(a, b)] -> (a, b)
+minByFirst = Data.List.minimumBy (\(a, _) (b, _) -> compare a b)
+
+-- | Solves the Traveling Salesperson Problem (TSP) for the given roadmap.
+-- This implementation uses Dynamic Programming and Bitmasking to find he shortest path
+-- that visits each city exactly once and returns to the starting city.
+-- The algorithm utilizes a memoization table to store the results of subproblems, which helps avoid redundant computations.
+-- Each entry in the memo table corresponds to a pair of a bitmask (representing the set of visited cities) and the current city,
+-- allowing the algorithm to efficiently compute the minimum cost of visiting all cities by incrementally 
+-- building solutions from smaller subproblems.
+-- Arguments:
+--   roadmap - A list of tuples where each tuple represents a road connecting two cities and their distance.
+-- Returns:
+--   A list of cities representing the shortest path that visits each city.
+-- Time Complexity: O(n * 2^n), where n is the number of cities.
+-- Space Complexity: O(2^n) for memoization storage.
+
 travelSales :: RoadMap -> Path
-travelSales = undefined
+travelSales roadmap =
+    let
+        allCities = cities roadmap
+        n = length allCities
+        maxBitmask = 2^n - 1
+        memo = Data.Array.array ((0, 0), (maxBitmask, n - 1)) [((bitmask, i), Nothing) | bitmask <- [0..maxBitmask], i <- [0..n - 1]]
+
+        tsp :: Int -> Int -> Data.Array.Array (Int, Int) (Maybe (Distance, Path)) -> (Maybe (Distance, Path), Data.Array.Array (Int, Int) (Maybe (Distance, Path)))
+        tsp bitmask pos memoArr
+            | bitmask == maxBitmask = 
+                let returnDist = distance roadmap (allCities !! pos) (allCities !! 0)
+                in case returnDist of
+                    Just dist -> (Just (dist, [allCities !! pos, allCities !! 0]), memoArr)  
+                    Nothing -> (Nothing, memoArr)
+            | otherwise =
+                case memoArr Data.Array.! (bitmask, pos) of
+                    Just result -> (Just result, memoArr)
+                    Nothing ->
+                        let possiblePaths = [(d + nextDist, allCities !! pos : nextPath) |
+                                               next <- [0 .. n - 1],
+                                               next /= pos,
+                                               (bitmask Data.Bits..&. (1 `Data.Bits.shiftL` next)) == 0,
+                                               let (nextResult, newMemo)= tsp(bitmask Data.Bits..|. (1 `Data.Bits.shiftL` next)) next memoArr,
+                                               Just d <- [distance roadmap (allCities !! pos) (allCities !! next)],
+                                               Just (nextDist, nextPath) <- [nextResult]]
+                            minPath = if null possiblePaths then Nothing else Just (minByFirst possiblePaths)
+                            updatedMemo = memoArr Data.Array.// [((bitmask, pos), minPath)]
+                        in (minPath, updatedMemo)
+
+    in case tsp 1 0 memo of
+        (Nothing, _) -> []
+        (Just (_, path), _) -> path
 
 tspBruteForce :: RoadMap -> Path
 tspBruteForce = undefined -- only for groups of 3 people; groups of 2 people: do not edit this function
