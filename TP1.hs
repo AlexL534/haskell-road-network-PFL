@@ -379,7 +379,7 @@ travelSales roadmap =
                                                next <- [0 .. n - 1],
                                                next /= pos,
                                                (bitmask Data.Bits..&. (1 `Data.Bits.shiftL` next)) == 0,
-                                               let (nextResult, newMemo)= tsp(bitmask Data.Bits..|. (1 `Data.Bits.shiftL` next)) next memoArr,
+                                               let (nextResult, updatedMemo)= tsp(bitmask Data.Bits..|. (1 `Data.Bits.shiftL` next)) next memoArr,
                                                Just d <- [distance roadmap (allCities !! pos) (allCities !! next)],
                                                Just (nextDist, nextPath) <- [nextResult]]
                             minPath = if null possiblePaths then Nothing else Just (minByFirst possiblePaths)
