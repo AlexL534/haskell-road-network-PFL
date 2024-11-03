@@ -198,7 +198,7 @@ addPQueue pq newDist = Data.List.sortOn snd ([if fst p `elem` map fst newDist th
 --  newV - Values used to update the distances in the list
 -- Time Complexity: O(N^2), where N is the size of the priority queue, due to the use of `filter` within a list comprehension.
 -- Space Complexity: O(1), as it produces a new list without additional storage.
-updateDistToSourceList :: PQueue->[(City,Distance)] ->PQueue
+updateDistToSourceList :: [(City,Distance)]->[(City,Distance)] ->[(City,Distance)]
 updateDistToSourceList pq newV= [if fst p `elem` map fst newV then (fst p, snd (head (filter (\u->fst u == fst p) newV))) else p | p <-pq]
 
 
