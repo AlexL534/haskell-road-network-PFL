@@ -181,7 +181,13 @@ shortestPath = undefined
 minByFirst :: Ord a => [(a, b)] -> (a, b)
 minByFirst = Data.List.minimumBy (\(a, _) (b, _) -> compare a b)
 
- 
+-- | Solves the Traveling Salesperson Problem (TSP) for the given roadmap.
+-- This implementation uses Dynamic Programming and Bitmasking to find he shortest path
+-- that visits each city exactly once and returns to the starting city.
+-- The algorithm utilizes a memoization table to store the results of subproblems, which helps avoid redundant computations.
+-- Each entry in the memo table corresponds to a pair of a bitmask (representing the set of visited cities) and the current city,
+-- allowing the algorithm to efficiently compute the minimum cost of visiting all cities by incrementally 
+-- building solutions from smaller subproblems.
 -- Arguments:
 --   roadmap - A list of tuples where each tuple represents a road connecting two cities and their distance.
 -- Returns:
@@ -199,7 +205,11 @@ travelSales roadmap =
 
         tsp :: Int -> Int -> Data.Array.Array (Int, Int) (Maybe (Distance, Path)) -> (Maybe (Distance, Path), Data.Array.Array (Int, Int) (Maybe (Distance, Path)))
         tsp bitmask pos memoArr
-            | bitmask == maxBitmask = (Just (0, [allCities !! pos]), memoArr)
+            | bitmask == maxBitmask = 
+                let returnDist = distance roadmap (allCities !! pos) (allCities !! 0)
+                in case returnDist of
+                    Just dist -> (Just (dist, [allCities !! pos, allCities !! 0]), memoArr)  
+                    Nothing -> (Nothing, memoArr)
             | otherwise =
                 case memoArr Data.Array.! (bitmask, pos) of
                     Just result -> (Just result, memoArr)
@@ -208,11 +218,8 @@ travelSales roadmap =
                                                next <- [0 .. n - 1],
                                                next /= pos,
                                                (bitmask Data.Bits..&. (1 `Data.Bits.shiftL` next)) == 0,
-                                               let (nextResult, newMemo)
-                                                     = tsp
-                                                         (bitmask Data.Bits..|. (1 `Data.Bits.shiftL` next)) next memoArr,
-                                               Just d <- [distance
-                                                            roadmap (allCities !! pos) (allCities !! next)],
+                                               let (nextResult, newMemo)= tsp(bitmask Data.Bits..|. (1 `Data.Bits.shiftL` next)) next memoArr,
+                                               Just d <- [distance roadmap (allCities !! pos) (allCities !! next)],
                                                Just (nextDist, nextPath) <- [nextResult]]
                             minPath = if null possiblePaths then Nothing else Just (minByFirst possiblePaths)
                             updatedMemo = memoArr Data.Array.// [((bitmask, pos), minPath)]
@@ -220,8 +227,8 @@ travelSales roadmap =
 
     in case tsp 1 0 memo of
         (Nothing, _) -> []
-        (Just (_, path), _) -> path ++ [head path]
-        
+        (Just (_, path), _) -> path
+
 tspBruteForce :: RoadMap -> Path
 tspBruteForce = undefined -- only for groups of 3 people; groups of 2 people: do not edit this function
 
